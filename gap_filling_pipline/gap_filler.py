@@ -10,6 +10,7 @@ from scipy import linalg
 from Interfaces.functional_J_strategy import FunctionalJStrategy
 from Interfaces.min_distance_strategy import MinDistanceStrategy
 from Interfaces.vector_field_f_stategy import VectorFieldFStrategy
+from tools.utils import tree_to_layers
 
 
 class GapFiller:
@@ -176,7 +177,7 @@ class GapFiller:
         self.next_valid_v_index = next_valid_v_index
         self.l = next_valid_v_index - last_valid_v_index
 
-    def get_closest_points_layer(self, forward_layer, backward_layer):
+    def get_closest_points_layer(self):
         """
         This is the function picking out the best forward and backward branch.
         By iterating over all pairs the synchronous points, we find two closest points.
@@ -190,6 +191,14 @@ class GapFiller:
         -------
             The closest points' information.
         """
+
+        forward_layer = tree_to_layers(self.forward_branches_df,
+                                       queue=[(self.last_valid_v_index, 0)],
+                                       max_layer=self.next_valid_v_index - self.last_valid_v_index)
+        backward_layer = tree_to_layers(self.backward_branches_df,
+                                        queue=[(self.next_valid_v_index, 0)],
+                                        max_layer=self.next_valid_v_index - self.last_valid_v_index)
+
         l = len(forward_layer) - 1
         closest_dis = float('inf')
         closest_forward_index = 0

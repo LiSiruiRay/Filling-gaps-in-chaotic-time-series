@@ -32,8 +32,8 @@ class MinDistanceBruteforceStoreAll(MinDistanceStrategy):
 
     def get_closest_vector_index_by_index(self, vector_set: Union[np.ndarray, List],
                                           vector_index: int) -> int:
-        if self.dis_matrix is None:
-            MinDistanceBruteforceStoreAll.get_dis_matrix(vector_set)
+        if not hasattr(self, 'dis_matrix'):
+            self.get_dis_matrix(vector_set)
         closest_point_index = np.argmin(self.dis_matrix[vector_index])
         return closest_point_index
 

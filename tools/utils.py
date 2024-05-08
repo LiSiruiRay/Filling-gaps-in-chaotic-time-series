@@ -45,3 +45,31 @@ def Runge_Kutta(f, x, t, h):
     s_3 = f(x + h / 2 * s_2, t + h / 2)
     s_4 = f(x + h * s_3, t + h)
     return x + h / 6 * (s_1 + 2 * s_2 + 2 * s_3 + s_4)
+
+
+def tree_to_layers(tree, queue, max_layer: int):
+    layers = []
+    # queue = [("root", 0)]  # Queue of tuples (node, layer_index)
+
+    prev_layer = None
+    while queue and max_layer > 0:
+        print(f"while --------------")
+        print(queue)
+        # max_layer -= 1
+        current_node, layer = queue.pop(0)
+        if prev_layer != layer:
+            max_layer -= 1
+            prev_layer = layer
+
+        # Ensure the layer exists in the layers list
+        if len(layers) <= layer:
+            layers.append([])
+
+        # Append the current node to its respective layer
+        layers[layer].append(current_node)
+
+        # Enqueue all children of the current node
+        for child in tree.get(current_node, []):
+            queue.append((child, layer + 1))
+
+    return layers

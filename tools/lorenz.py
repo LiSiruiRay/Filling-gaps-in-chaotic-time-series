@@ -6,14 +6,15 @@ from pylab import *
 
 
 def Lorenz63(x, t=None):
-    """Saltzman's equations studied by Lorenz in his 1963 paper on chaos.
-Inputs
-x:  a 3-elements vector
-t:  dummy variable that allows to use this function with integrators written
-    for non-autonomous problems
+    """
+        Saltzman's equations studied by Lorenz in his 1963 paper on chaos.
+        Inputs
+        x:  a 3-elements vector
+        t:  dummy variable that allows to use this function with integrators written
+            for non-autonomous problems
 
-Returns the right-hand side of equations (6.53) in the book, but with
-different parameters.
+        Returns the right-hand side of equations (6.53) in the book, but with
+        different parameters.
 
     """
     s = 10.  # Prandtl's number

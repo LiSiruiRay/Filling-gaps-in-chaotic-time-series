@@ -62,7 +62,7 @@ def Runge_Kutta(f, x, t, h):
     return x + h / 6 * (s_1 + 2 * s_2 + 2 * s_3 + s_4)
 
 
-def tree_to_layers(tree: Dict[Set], queue: list, max_layer: int) -> List[List]:
+def tree_to_layers(tree: Dict[int, Set], queue: list, max_layer: int) -> List[List]:
     """
     Takes a tree and converts it into a tree of layers.
     Parameters

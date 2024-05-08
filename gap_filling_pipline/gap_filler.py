@@ -10,6 +10,8 @@ class GapFiller:
     ts: np.ndarray
     m: int
     t: int
+    last_valid_v_index: int  # predecessor of the gap
+    next_valid_v_index: int  # successor of the gap
     mds: MinDistanceStrategy
     reconstructed_vectors: np.ndarray
 
@@ -40,4 +42,12 @@ class GapFiller:
         # Find the index of the last sub-array containing NaN
         last_nan_index = np.max(np.where(contains_nan)[0]) if np.any(contains_nan) else None
 
-        return first_nan_index, last_nan_index
+        last_valid_v_index = first_nan_index - 1
+        next_valid_v_index = last_nan_index + 1
+
+        if last_valid_v_index < 0 or next_valid_v_index >= len(self.reconstructed_vectors):
+            raise ValueError('Invalid gap points, this method is not applicable for forcasting '
+                             '(neither forward or backward)')
+
+        self.last_valid_v_index = last_valid_v_index
+        self.next_valid_v_index = next_valid_v_index

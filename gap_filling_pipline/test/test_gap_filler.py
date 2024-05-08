@@ -40,17 +40,16 @@ class MyTestCaseGapFiller(unittest.TestCase):
         pass
 
     def test_branching(self):
-        # mds = MinDistanceBruteforceStoreAll()
-        # ts = demo_data_generator()
-        # t = 10
-        # m = 3
-        # n_f = 5
-        # n_b = 5
-        # r = 2
-        # gp = GapFiller(ts=ts, m=m, n_f=n_f, r=r, t=t, n_b=n_b, mds=mds, fjs=None, vffs=None)
-        # gp.get_branches_backward()
-        # print(f"back_branches_df: {gp.backward_branches_df}, back_branches_df_reverse: {gp.back_branches_df_reverse}")
-        pass
+        mds = MinDistanceBruteforceStoreAll()
+        ts = demo_data_generator()
+        t = 10
+        m = 3
+        n_f = 5
+        n_b = 5
+        r = 2
+        gp = GapFiller(ts=ts, m=m, n_f=n_f, r=r, t=t, n_b=n_b, mds=mds, fjs=None, vffs=None)
+        gp.get_branches_backward()
+        print(f"back_branches_df: {gp.backward_branches_df}, back_branches_df_reverse: {gp.back_branches_df_reverse}")
 
     def test_get_gap_list(self):
         mds = MinDistanceBruteforceStoreAll()
@@ -63,8 +62,11 @@ class MyTestCaseGapFiller(unittest.TestCase):
         gp = GapFiller(ts=ts, m=m, n_f=n_f, r=r, t=t, n_b=n_b, mds=mds, fjs=None, vffs=None)
         gp.get_branches_forward()
         gp.get_branches_backward()
+        gp.get_closest_points_layer()
+        print(gp.get_gap_vector_index_list())
+        correct_result = [185, 186, 187, 387, 388, 389, 390, 391, 392, 393]
+        self.assertEqual(gp.get_gap_vector_index_list(), correct_result)
 
-    def test_get_gap_list(self):
 
 
 

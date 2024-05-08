@@ -84,8 +84,8 @@ def tree_to_layers(tree: Dict[int, Set], queue: list, max_layer: int) -> List[Li
 
     prev_layer = None
     while queue and max_layer > 0:
-        print(f"while --------------")
-        print(queue)
+        # print(f"while --------------")
+        # print(queue)
         # max_layer -= 1
         current_node, layer = queue.pop(0)
         if prev_layer != layer:

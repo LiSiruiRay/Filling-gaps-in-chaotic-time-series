@@ -45,9 +45,9 @@ class MyTestCaseGapFiller(unittest.TestCase):
         n_f = 5
         n_b = 5
         r = 2
-        gp = GapFiller(ts=ts, m=m, n_f=n_f, r=r, t=t, n_b=n_b, mds=mds)
-        back_branches_df, back_branches_df_reverse = gp.get_branches_backward()
-        print(f"back_branches_df: {back_branches_df}, back_branches_df_reverse: {back_branches_df_reverse}")
+        gp = GapFiller(ts=ts, m=m, n_f=n_f, r=r, t=t, n_b=n_b, mds=mds, fjs=None, vffs=None)
+        gp.get_branches_backward()
+        print(f"back_branches_df: {gp.backward_branches_df}, back_branches_df_reverse: {gp.back_branches_df_reverse}")
 
 
 if __name__ == '__main__':

@@ -7,19 +7,26 @@ from typing import Set, Dict
 import numpy as np
 from scipy import linalg
 
+from Interfaces.functional_J_strategy import FunctionalJStrategy
 from Interfaces.min_distance_strategy import MinDistanceStrategy
+from Interfaces.vector_field_f_stategy import VectorFieldFStrategy
 
 
 class GapFiller:
     ts: np.ndarray
     m: int
     t: int
-    last_valid_v_index: int  # predecessor of the gap
-    next_valid_v_index: int  # successor of the gap
     l: int  # gap length
     n_f: int  # forward branching time
     n_b: int  # backward branching time
     r: int  # stride step
+
+    fjs: FunctionalJStrategy
+    vffs: VectorFieldFStrategy
+
+    # ----
+    last_valid_v_index: int  # predecessor of the gap
+    next_valid_v_index: int  # successor of the gap
     last_valid_closest_neighbor_index: int
     next_valid_closest_neighbor_index: int
     mds: MinDistanceStrategy
@@ -31,7 +38,8 @@ class GapFiller:
     backward_branches_df: Dict[int, Set]
     back_branches_df_reverse: Dict[int, int]
 
-    def __init__(self, ts: np.ndarray, m: int, t: int, n_f: int, n_b: int, r: int, mds: MinDistanceStrategy, ):
+    def __init__(self, ts: np.ndarray, m: int, t: int, n_f: int, n_b: int, r: int,
+                 mds: MinDistanceStrategy, fjs: FunctionalJStrategy, vffs: VectorFieldFStrategy):
         self.ts = ts
         self.m = m
         self.t = t
@@ -39,6 +47,8 @@ class GapFiller:
         self.n_b = n_b
         self.r = r
         self.mds = mds
+        self.fjs = fjs
+        self.vffs = vffs
         self.reconstruct_timeseries()
         self.get_breaking_points()
 
@@ -122,6 +132,13 @@ class GapFiller:
         )
 
     def reconstruct_timeseries(self):
+        """
+        Construct vectors from a timeseries.
+
+        Returns
+        -------
+
+        """
         indices_list = []
         for i in range(self.m):
             indices_list.append(np.arange(i, len(self.ts), self.t))
@@ -160,6 +177,19 @@ class GapFiller:
         self.l = next_valid_v_index - last_valid_v_index
 
     def get_closest_points_layer(self, forward_layer, backward_layer):
+        """
+        This is the function picking out the best forward and backward branch.
+        By iterating over all pairs the synchronous points, we find two closest points.
+
+        Parameters
+        ----------
+        forward_layer: The layer form of branches converted from forward branches
+        backward_layer:  The layer form of branches converted from backward branches
+
+        Returns
+        -------
+            The closest points' information.
+        """
         l = len(forward_layer) - 1
         closest_dis = float('inf')
         closest_forward_index = 0
@@ -179,6 +209,19 @@ class GapFiller:
         return closest_dis, closest_forward_index, closest_forward_index_sub, closest_backward_index_sub
 
     def get_closest_points_one_layer(self, forward_vectors, backward_vectors):
+        """
+        Helper function to `get_closest_points_layer`, get the closest point between one layer
+        (one forward and one backward)
+
+        Parameters
+        ----------
+        forward_vectors
+        backward_vectors
+
+        Returns
+        -------
+
+        """
         min_dis = float('inf')
         forward_sub_index = 0
         backward_sub_index = 0

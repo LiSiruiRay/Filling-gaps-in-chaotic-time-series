@@ -2,8 +2,10 @@
 # Date: 5/8/24
 # Description:
 from collections import defaultdict
+from typing import Set, Dict
 
 import numpy as np
+from scipy import linalg
 
 from Interfaces.min_distance_strategy import MinDistanceStrategy
 
@@ -23,7 +25,13 @@ class GapFiller:
     mds: MinDistanceStrategy
     reconstructed_vectors: np.ndarray
 
-    def __init__(self, ts: np.ndarray, m: int, t: int, n_f: int, n_b: int, r: int, mds: MinDistanceStrategy,):
+    # ----
+    forward_branches_df: Dict[int, Set]
+    forward_branches_df_reverse: Dict[int, int]
+    backward_branches_df: Dict[int, Set]
+    back_branches_df_reverse: Dict[int, int]
+
+    def __init__(self, ts: np.ndarray, m: int, t: int, n_f: int, n_b: int, r: int, mds: MinDistanceStrategy, ):
         self.ts = ts
         self.m = m
         self.t = t
@@ -38,8 +46,8 @@ class GapFiller:
 
         l = self.next_valid_v_index - self.last_valid_v_index - 1
 
-        back_branches_df = defaultdict(set)
-        back_branches_df_reverse = dict()
+        backward_branches_df = defaultdict(set)
+        backward_branches_df_reverse = dict()
 
         curr_node_index = self.next_valid_v_index
 
@@ -48,16 +56,16 @@ class GapFiller:
                 break
             jump_to_index = self.mds.get_closest_vector_index_by_index(vector_set=self.reconstructed_vectors,
                                                                        vector_index=curr_node_index)
-            back_branches_df[curr_node_index].add(jump_to_index)
-            back_branches_df_reverse[jump_to_index] = curr_node_index
-            back_branches_df, back_branches_df_reverse = (
+            backward_branches_df[curr_node_index].add(jump_to_index)
+            backward_branches_df_reverse[jump_to_index] = curr_node_index
+            backward_branches_df, backward_branches_df_reverse = (
                 self.get_one_branch(index=jump_to_index,
                                     rest_steps=l - (i * (self.r + 1)) - 1,
-                                    forward_branches_df=back_branches_df,
-                                    forward_branches_df_reverse=back_branches_df_reverse,
+                                    forward_branches_df=backward_branches_df,
+                                    forward_branches_df_reverse=backward_branches_df_reverse,
                                     forward=False))
             curr_node_index = jump_to_index - self.r
-        return back_branches_df, back_branches_df_reverse
+        self.backward_branches_df, self.back_branches_df_reverse = backward_branches_df, backward_branches_df_reverse
 
     def get_branches_forward(self):
         l = self.next_valid_v_index - self.last_valid_v_index - 1
@@ -81,7 +89,7 @@ class GapFiller:
                                       forward=True,
                                       forward_branches_df_reverse=forward_branches_df_reverse)
             curr_node_index = jump_to_index + self.r
-        return forward_branches_df, forward_branches_df_reverse
+        self.forward_branches_df, self.forward_branches_df_reverse = forward_branches_df, forward_branches_df_reverse
 
     def get_one_branch(self, index: int, rest_steps: int, forward_branches_df: dict,
                        forward_branches_df_reverse, forward: bool = True):
@@ -150,3 +158,53 @@ class GapFiller:
         self.last_valid_v_index = last_valid_v_index
         self.next_valid_v_index = next_valid_v_index
         self.l = next_valid_v_index - last_valid_v_index
+
+    def get_closest_points_layer(self, forward_layer, backward_layer):
+        l = len(forward_layer) - 1
+        closest_dis = float('inf')
+        closest_forward_index = 0
+        closest_forward_index_sub = 0
+        closest_backward_index_sub = 0
+        for i in range(l):
+            forward_vectors = forward_layer[i]
+            backward_vectors = backward_layer[l - i]
+            forward_sub_index, backward_sub_index, dis = (
+                self.get_closest_points_one_layer(forward_vectors,
+                                                  backward_vectors))
+            if dis < closest_dis:
+                closest_dis = dis
+                closest_forward_index = i
+                closest_forward_index_sub = forward_sub_index
+                closest_backward_index_sub = backward_sub_index
+        return closest_dis, closest_forward_index, closest_forward_index_sub, closest_backward_index_sub
+
+    def get_closest_points_one_layer(self, forward_vectors, backward_vectors):
+        min_dis = float('inf')
+        forward_sub_index = 0
+        backward_sub_index = 0
+        for n, i in enumerate(forward_vectors):
+            for m, j in enumerate(backward_vectors):
+                curr_dis = linalg.norm(self.reconstructed_vectors[i] - self.reconstructed_vectors[j])
+                if curr_dis < min_dis:
+                    min_dis = curr_dis
+                    forward_sub_index = n
+                    backward_sub_index = m
+        return forward_sub_index, backward_sub_index, min_dis
+
+    def get_gap_vector_index_list(self, closest_forward_index, closest_forward_index_sub, closest_backward_index_sub,
+                                  forward_branches_df_reverse, backward_branches_df_reverse, forward_layer,
+                                  backward_layer, l: int):
+        forward_vector_index = forward_layer[closest_forward_index][closest_forward_index_sub]
+        backward_vector_index = backward_layer[l - closest_forward_index][closest_backward_index_sub]
+        vector_index_list = list()
+        curr_backward_vector_index = backward_vector_index
+        curr_forward_vector_index = forward_vector_index
+        for i in range(closest_forward_index):
+            vector_index_list.insert(0, curr_forward_vector_index)
+            curr_forward_vector_index = forward_branches_df_reverse[curr_forward_vector_index]
+
+        for i in range(l - closest_forward_index):
+            vector_index_list.append(curr_backward_vector_index)
+            curr_backward_vector_index = backward_branches_df_reverse[curr_backward_vector_index]
+
+        return vector_index_list

@@ -28,6 +28,6 @@ def demo_data_generator():
     """
     x, t = iterate_solver(Runge_Kutta, Lorenz63, [-1., 1., 18.4], 0, 0.01, 50.)
     x_gapped = copy.deepcopy(x)
-    x_gapped[2000:2100] = np.nan
+    x_gapped[2000:3000] = np.nan
     ts = x_gapped[:, 0]
-    return ts
+    return ts, t

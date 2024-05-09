@@ -2,9 +2,10 @@
 # Date: 5/8/24
 # Description:
 from collections import defaultdict
-from typing import Set, Dict
+from typing import Set, Dict, List, Callable, Any
 
 import numpy as np
+from numpy import row_stack
 from scipy import linalg
 
 from Interfaces.functional_J_strategy import FunctionalJStrategy
@@ -14,6 +15,7 @@ from tools.utils import tree_to_layers
 
 
 class GapFiller:
+    time_data: np.ndarray  # time
     ts: np.ndarray
     m: int
     t: int
@@ -21,6 +23,7 @@ class GapFiller:
     n_f: int  # forward branching time
     n_b: int  # backward branching time
     r: int  # stride step
+    minimize: Callable[[Any], Any]
 
     fjs: FunctionalJStrategy
     vffs: VectorFieldFStrategy
@@ -39,8 +42,16 @@ class GapFiller:
     backward_branches_df: Dict[int, Set]
     backward_branches_df_reverse: Dict[int, int]
 
-    def __init__(self, ts: np.ndarray, m: int, t: int, n_f: int, n_b: int, r: int,
-                 mds: MinDistanceStrategy, fjs: FunctionalJStrategy, vffs: VectorFieldFStrategy):
+    # ----
+    gap_vector_index_list: List[int]
+    gap_vector_list: np.ndarray
+
+    optimized_gap_vector: np.ndarray
+
+    def __init__(self, time_data, ts: np.ndarray, m: int, t: int, n_f: int, n_b: int, r: int,
+                 mds: MinDistanceStrategy, fjs: FunctionalJStrategy,
+                 vffs: VectorFieldFStrategy, minimize: Callable[[Any], Any]):
+        self.time_data = time_data
         self.ts = ts
         self.m = m
         self.t = t
@@ -50,6 +61,7 @@ class GapFiller:
         self.mds = mds
         self.fjs = fjs
         self.vffs = vffs
+        self.minimize = minimize
         self.reconstruct_timeseries()
         self.get_breaking_points()
 
@@ -246,7 +258,7 @@ class GapFiller:
                     backward_sub_index = m
         return forward_sub_index, backward_sub_index, min_dis
 
-    def get_gap_vector_index_list(self):
+    def get_gap_vector_and_index_list(self):
         l = self.next_valid_v_index - self.last_valid_v_index - 1
         forward_vector_index = self.forward_layer[self.closest_forward_index][self.closest_forward_index_sub]
         backward_vector_index = self.backward_layer[l - self.closest_forward_index][self.closest_backward_index_sub]
@@ -261,4 +273,18 @@ class GapFiller:
             vector_index_list.append(curr_backward_vector_index)
             curr_backward_vector_index = self.backward_branches_df_reverse[curr_backward_vector_index]
 
-        return vector_index_list
+        self.gap_vector_index_list = vector_index_list
+        gap_vector_list = [self.reconstructed_vectors[i] for i in self.gap_vector_index_list]
+        gap_vector_list = row_stack(gap_vector_list)
+        self.gap_vector_list = gap_vector_list
+
+    def minimize_gap_vectors(self):
+        def wrapper_J_for_minimize(v_f):
+            return self.fjs.J(gap_filling_vectors=v_f.reshape((self.next_valid_v_index - self.last_valid_v_index - 1, self.m)),
+                              reconstructed_vectors=self.reconstructed_vectors,
+                              t=self.time_data, F=self.vffs.F)
+
+        result = self.minimize(wrapper_J_for_minimize,
+                              self.gap_vector_list.flatten(),
+                              method='L-BFGS-B')
+        self.optimized_gap_vector = result.x.reshape((self.next_valid_v_index - self.last_valid_v_index - 1, self.m))

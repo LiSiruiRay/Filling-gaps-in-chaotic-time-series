@@ -86,4 +86,4 @@ The project is an implementation of my professor's paper: [filling_gaps.pdf](fil
 - The `gap_filling_pipeline` is the core component where all elements of the project converge.
 - Finally, `main.py` acts as the entry point of the program. Users can input their time series data and run the program directly from this file.
 
-# More information can be found in Implementing_Gap_Filling_Algorithms_in_Chaotic_Time_Series_Analysis.pdf
+# More information can be found in [Implementing_Gap_Filling_Algorithms_in_Chaotic_Time_Series_Analysis.pdf](Implementing_Gap_Filling_Algorithms_in_Chaotic_Time_Series_Analysis)

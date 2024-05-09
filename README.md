@@ -1,6 +1,6 @@
 # Filling-gaps-in-chaotic-time-series
 
-The project is an implementation of my professor's paper: filling_gaps.pdf
+The project is an implementation of my professor's paper: [filling_gaps.pdf](filling_gaps.pdf)
 
 # File Structure
 

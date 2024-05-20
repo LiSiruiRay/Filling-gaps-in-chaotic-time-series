@@ -26,8 +26,8 @@ def demo_data_generator():
     Generated time series data set.
 
     """
-    x, t = iterate_solver(Runge_Kutta, Lorenz63, [-1., 1., 18.4], 0, 0.01, 50.)
+    x, t = iterate_solver(Runge_Kutta, Lorenz63, [-1., 1., 18.4], 0, 0.1, 50.)
     x_gapped = copy.deepcopy(x)
-    x_gapped[2000:3000] = np.nan
+    x_gapped[200:210] = np.nan
     ts = x_gapped[:, 0]
     return ts, t

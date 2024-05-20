@@ -153,13 +153,19 @@ class GapFiller:
 
         """
         indices_list = []
-        for i in range(self.m):
-            indices_list.append(np.arange(i, len(self.ts), self.t))
+        N_bar = len(self.ts)
+        for i in range(N_bar - (self.m-1)*self.t):
+            indices_list.append(np.arange(i, i + (self.m - 1)*self.t + 1, self.t))
 
         shortest_length = len(indices_list[-1])
         indices_list = [i[:shortest_length] for i in indices_list]
         vector_entries = [self.ts[i] for i in indices_list]
-        self.reconstructed_vectors = np.column_stack(vector_entries)
+        self.reconstructed_vectors = np.row_stack(vector_entries)
+        # print(indices_list)
+        print(self.reconstructed_vectors.shape)
+        print(self.reconstructed_vectors[:, 0])
+        # for i in self.reconstructed_vectors[0]:
+        #     print(i)
 
     def get_breaking_points(self):
         """
@@ -182,11 +188,13 @@ class GapFiller:
         next_valid_v_index = last_nan_index + 1
 
         if last_valid_v_index < 0 or next_valid_v_index >= len(self.reconstructed_vectors):
-            raise ValueError('Invalid gap points, this method is not applicable for forcasting '
-                             '(neither forward or backward)')
+            raise ValueError(f'Invalid gap points, this method is not applicable for forcasting '
+                             f'(neither forward or backward)， first point is {last_valid_v_index}, last is {next_valid_v_index}')
 
         self.last_valid_v_index = last_valid_v_index
         self.next_valid_v_index = next_valid_v_index
+        print(f"last_valid_v_index: {self.last_valid_v_index}")
+        print(f"next_valid_v_index: {self.next_valid_v_index}")
         # self.l = next_valid_v_index - last_valid_v_index
 
     def get_closest_points_layer(self):

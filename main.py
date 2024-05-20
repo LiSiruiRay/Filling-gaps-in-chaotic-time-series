@@ -21,9 +21,9 @@ def main():
     start_time = time.time()
     mds = MinDistanceBruteforceStoreAll()
     ts, time_data = demo_data_generator()
-    t = 10  # the gap between each sampling
-    m = 100  # sample vector dimension
-    n_f = 200  # same n_f in the paper, stride time
+    t = 3  # the gap between each sampling
+    m = 3  # sample vector dimension
+    n_f = 3  # same n_f in the paper, stride time
     n_b = 5  # same n_d in the paper, stride time
     r = 2  # stride step
     fjs = DiscreteJ1Strategy()
@@ -33,10 +33,12 @@ def main():
     gp.get_branches_forward()
     gp.get_branches_backward()
     print(f"finished branching")
+    print(f"reconstruct vector length: {len(gp.reconstructed_vectors)}")
     gp.get_closest_points_layer()
     gp.get_gap_vector_and_index_list()
     print(f"finished gapping")
-    # print(f"gp.gap_vecto_list: {gp.gap_vector_list}")
+
+    print(f"gp.gap_vecto_list: {gp.gap_vector_list}")
     # print(f"gp.gap_vecto_list: {len(gp.gap_vector_list)}")
     gp.minimize_gap_vectors()
     end_time = time.time()
